@@ -1,16 +1,15 @@
-const prompt = require('prompt-sync')({
-    sigint: true
-    });
+// This is for taking user input
+const prompt = require('prompt-sync')({sigint: true});
   
   // Variable initialization
-  const hat = '^'; //Hat
-  const hole = 'O'; // Hole
-  const fieldCharacter = '░'; // background char
-  const pathCharacter = '*'; // player's path
+const hat = '^'; //Hat
+const hole = 'O'; // Hole
+const fieldCharacter = '░'; // background char
+const pathCharacter = '*'; // player's path
 
-  class Field {
+class Field {
       constructor(dimX, dimY) {
-          this.fieldY = [];
+          this.field = [];
           this.dimX = dimX;
           this.dimY = dimY;
           this.userInitxPos = 0;
@@ -19,13 +18,13 @@ const prompt = require('prompt-sync')({
           this.useryPos = this.userInityPos;
           this.playing;
       }
-      // Esta funcion llena el field
+      // Fills the game field
       fillField () {
-          // Escoger una posicion aleatoria para el sombrero ^
+          // Choose randomly a position for the hat ^
         let hatxPosition = Math.floor(Math.random() * this.dimX);
         let hatyPosition = Math.floor(Math.random() * this.dimY);
 
-        // Si es la posicion [0,0] aleatoriamente escoja a que dimension incrementarle 1
+        // If position [0,0] was the result randomly choose a dimension to add 1
         if (hatxPosition === 0 && hatyPosition === 0) {
             let unTie = Math.floor(Math.random() * 2);
             if (unTie === 0) {
@@ -35,36 +34,37 @@ const prompt = require('prompt-sync')({
             }
         }
 
-        // Hacer el layout
-        // Otra manera de crear y llenar un array => const field = new Array(10).fill(0).map(el => new Array(10));
+        // Fills the field 
         for (let i = 0; i < this.dimY; i++) {
             let fieldX = [];
             for (let j = 0; j < this.dimX; j++) {
-                let cell = Math.random() * 2;
-                // Si esta en la primera posicion [0,0] agregue *
+                let cell = Math.random();
+                // When at position [0,0] assign the pathCharacter
                 if (i === this.userInityPos && j === this.userInitxPos) {
                     fieldX.push(pathCharacter);
-                // Si esta en la posicion escogida aleatoriamente para el sombrero agregue ^
+                // When at hat's previously choosen position assign the hat
                 } else if (i === hatyPosition && j === hatxPosition) {
                     fieldX.push(hat);
                 }
+                // Fill the rest with holes and fieldCharacters constrained to 40% probability for holes and 60% for fieldCharacters
                 else {
-                    if (cell <= 0.4) {
+                    if (cell <= 0.3) {
                         fieldX.push(hole);
-                    } else if (cell > 0.4) {
+                    } else if (cell > 0.3) {
                         fieldX.push(fieldCharacter);
                     }
                 }
             }
-            this.fieldY.push(fieldX);
+            this.field.push(fieldX);
         }
       }
-      // Actualiza el layout del juego segun el input del usuario
+      // Updates the field layout according to user input
       layoutChange (userInput) {
-
+        // Remember previous user position 
         let previousxPosition = this.userxPos;
         let previousyPosition = this.useryPos;
 
+        // Check if move is inside borders
         if (userInput === 'U') {
             if (this.useryPos < 1) {
                 this.playing = false;
@@ -97,37 +97,44 @@ const prompt = require('prompt-sync')({
             return "That move doesn't work";
         }
 
-        if (this.fieldY[this.useryPos][this.userxPos] === hole) {
+        // Check surroundings according to user move
+        if (this.field[this.useryPos][this.userxPos] === hole) {
                 this.playing = false;
                 return "You've just gone down a hole. Game Over";
-        } else if (this.fieldY[this.useryPos][this.userxPos] === fieldCharacter) {
-                this.fieldY[this.useryPos][this.userxPos] = pathCharacter;
+        } else if (this.field[this.useryPos][this.userxPos] === fieldCharacter) {
+                this.field[this.useryPos][this.userxPos] = pathCharacter;
                 return 'Good move!';
-        } else if (this.fieldY[this.useryPos][this.userxPos] === hat) {
+        } else if (this.field[this.useryPos][this.userxPos] === hat) {
                 this.playing = false;
                 return "You've just won the game!!!";
         }
-        //printField();
+        
       }
-      // Imnprime el campo de juego
+      // Prints the game field
       printField () {
-          this.fieldY.forEach((element, index) => {
+          this.field.forEach((element, index) => {
             console.log(element.join(''));
         });
       }
-      // Esta funcion se encarga del juego
+
+      // Run the game
       play () {
+
           this.fillField();
           this.playing = true;
+
           while (this.playing) {
+
             this.printField();
+
             const nextStep = prompt('What is your next move? (U=Up, R=Right, D=Down, L=Left)').toUpperCase();
             console.log(`Next move is ${nextStep}`);
+            
             let gameMessage = this.layoutChange(nextStep);
             console.log(gameMessage);   
         }
       }
-  }
+}
   
  const game = new Field(10, 10);
  game.play();
